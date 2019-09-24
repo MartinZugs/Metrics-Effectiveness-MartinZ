@@ -1,12 +1,12 @@
-# An example to get the remaining rate limit using the Github GraphQL API.
-
+# Import statements, just ordered dicts and requests for now
 import requests
 from collections import OrderedDict 
 
+# Header with my token
 headers = {"Authorization": }
 
-
-def run_query(query): # A simple function to use requests.post to make the API call. Note the json= section.
+# A simple function to use requests.post to make the API call. Note the json= section.
+def run_query(query): 
     request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=headers)
     if request.status_code == 200:
         return request.json()
@@ -14,7 +14,7 @@ def run_query(query): # A simple function to use requests.post to make the API c
         raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
 
         
-# The GraphQL query (with a few aditional bits included) itself defined as a multi-line string.       
+# First query, this receives a list of all the commits with their dates and their OIDs      
 first_query = """
 {
   rateLimit {
@@ -60,6 +60,7 @@ first_query = """
 #      }
 #    }
 
+# This is the second query to piggyback of the first one, what this does is the exact same thing as the first query, but it goes through all of the pages of the response
 second_query = """
 {
   rateLimit {
@@ -89,30 +90,38 @@ second_query = """
 }
 """
 
+# An ordered dict of all of the commit dates and OIDs
 dates_and_oids = OrderedDict([])
 
-result = run_query(first_query) # Execute the query
+# Execute the query
+result = run_query(first_query) 
 
+# Takes the response and adds the dates and OIDs to the ordered dict
 for x in result["data"]["repository"]["object"]["history"]["nodes"]:
     dates_and_oids["'" + x["committedDate"] + "'"] = str(x["oid"])
 
+# Gets the ID of the next page
 next_page = result["data"]["repository"]["object"]["history"]["pageInfo"]["endCursor"]
 
-remaining_rate_limit = result["data"]["rateLimit"]["remaining"] # Drill down the dictionary
+# This gets the remaining number of calls that can be made
+remaining_rate_limit = result["data"]["rateLimit"]["remaining"] 
 print("Remaining rate limit - {}".format(remaining_rate_limit))
 
-
+# This loop goes through and paginates through all of the responses
 while next_page:
+    # Calls the second query with the next call ID
     result = run_query(second_query % str(next_page))
 
+    # Same as the above 
     for x in result["data"]["repository"]["object"]["history"]["nodes"]:
         dates_and_oids["'" + x["committedDate"] + "'"] = str(x["oid"])
 
-    remaining_rate_limit = result["data"]["rateLimit"]["remaining"] # Drill down the dictionary
+    remaining_rate_limit = result["data"]["rateLimit"]["remaining"] 
     print("Remaining rate limit - {}".format(remaining_rate_limit))
 
     next_page = result["data"]["repository"]["object"]["history"]["pageInfo"]["endCursor"]
 
+# Prints the ordered dict
 for x in dates_and_oids:
     print(x)
     print(dates_and_oids[x])

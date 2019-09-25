@@ -3,7 +3,7 @@ import requests
 from collections import OrderedDict 
 
 # Header with my token
-headers = {"Authorization": "token 15890de41fb5508db2d44db9241dfe239753bab4"}
+headers = {"Authorization": "token "}
 
 # A simple function to use requests.post to make the API call. Note the json= section.
 def run_query(query): 
@@ -14,9 +14,9 @@ def run_query(query):
         raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
 
 # A function that returns ther dates and oids of a github repo
-def get_commit_dates_and_oids(dates_and_oids):
+def get_commit_dates_and_oids(dates_and_oids, un, rn):
     # Execute the query
-    result = run_query(first_query) 
+    result = run_query(first_query % (un, rn)) 
 
     # Takes the response and adds the dates and OIDs to the ordered dict
     for x in result["data"]["repository"]["object"]["history"]["nodes"]:
@@ -32,7 +32,7 @@ def get_commit_dates_and_oids(dates_and_oids):
     # This loop goes through and paginates through all of the responses
     while next_page:
         # Calls the second query with the next call ID
-        result = run_query(second_query % str(next_page))
+        result = run_query(second_query % (un, rn, str(next_page)))
 
         # Same as the above 
         for x in result["data"]["repository"]["object"]["history"]["nodes"]:
@@ -45,6 +45,27 @@ def get_commit_dates_and_oids(dates_and_oids):
 
     return dates_and_oids
 
+def get_number_of_letters(dates_and_oids, un, rn):
+    
+    total = ""
+
+    # Prints the ordered dict
+    for x in dates_and_oids:
+
+        print(x)
+        print(dates_and_oids[x])
+        content = run_query(third_query % (un, rn, str(dates_and_oids[x])))
+
+        remaining_rate_limit = content["data"]["rateLimit"]["remaining"] 
+        print("Remaining rate limit - {}".format(remaining_rate_limit))
+        
+        for y in content['data']['repository']['object']['tree']['entries']:
+            total = total + (y['object']['text'])
+
+        print(total)
+        print(len(total))
+        print(total.count('\n'))
+            
 
 # First query, this receives a list of all the commits with their dates and their OIDs      
 first_query = """
@@ -56,7 +77,7 @@ first_query = """
     resetAt
   }
   
-  repository(owner: "CornellNLP" name:"Cornell-Conversational-Analysis-Toolkit"){
+  repository(owner: "%s" name:"%s"){
 
     object(expression: "master") {
       ... on Commit {
@@ -76,22 +97,6 @@ first_query = """
 }
 """
 
-#object(oid:"03cd07458a24b2241aebb27b0ea5219a44cf151a"){
-#      ... on Commit{
-#        oid
-#        tree{
-#          entries{
-#            name
-#            object{
-#              ... on Blob{
-#                text
-#              }
-#            }
-#          }
-#        }
-#      }
-#    }
-
 # This is the second query to piggyback of the first one, what this does is the exact same thing as the first query, but it goes through all of the pages of the response
 second_query = """
 {
@@ -102,7 +107,7 @@ second_query = """
     resetAt
   }
   
-  repository(owner: "CornellNLP" name:"Cornell-Conversational-Analysis-Toolkit"){
+  repository(owner: "%s" name:"%s"){
 
     object(expression: "master") {
       ... on Commit {
@@ -122,13 +127,81 @@ second_query = """
 }
 """
 
+third_query = """
+{
+    rateLimit {
+        limit
+        cost
+        remaining
+        resetAt
+      }
+
+  repository(owner: "%s" name:"%s"){
+    object(oid:"%s"){
+      
+      ... on Commit{
+        oid
+        tree{
+          entries{
+            name
+            type
+            oid
+            object{
+              ... on Tree {
+                entries {
+                oid
+                name
+                type
+                    object{
+                      ... on Tree {
+                    entries {
+                    oid
+                    name
+                    type
+                        object{
+                          ... on Tree {
+                        entries {
+                        oid
+                        name
+                        type}}
+                        ... on Blob{
+                            text
+                          } 
+                    }
+                }}
+                      ... on Blob{
+                        text
+                      } 
+                }
+                  
+              }
+              }
+              ... on Blob{
+                text
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+"""
+
 # An ordered dict of all of the commit dates and OIDs
 dates_and_oids = OrderedDict([])
 
-dates_and_oids = get_commit_dates_and_oids(dates_and_oids)
+# Allows the user to input their desired GitHub Repo information
+username = input("Please input the username of the desired GitHub Repository owner: ")
+repo_name = input("Please input the Repository name: ")
 
-# Prints the ordered dict
-for x in dates_and_oids:
-    print(x)
-    print(dates_and_oids[x])
+# Gets the dates and oids of all commits
+dates_and_oids = get_commit_dates_and_oids(dates_and_oids, username, repo_name)
+
+# Gets the number of letters
+num_o_letters = get_number_of_letters(dates_and_oids, username, repo_name)
+
+    
+
 

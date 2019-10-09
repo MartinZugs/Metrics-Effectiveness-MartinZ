@@ -10,7 +10,7 @@ dt_object = datetime.fromtimestamp(timestamp)
 username = 'MartinZugs'
 
 # from https://github.com/user/settings/tokens
-token = '785adec08c81ac47883dc8ce1d5d56aab8738c4e'
+token = ''
 
 commits_url = 'https://api.github.com/repos/CornellNLP/Cornell-Conversational-Analysis-Toolkit/stats/contributors'
 add_delete_url = 'https://api.github.com/repos/CornellNLP/Cornell-Conversational-Analysis-Toolkit/stats/code_frequency'

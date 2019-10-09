@@ -2,6 +2,7 @@
 import requests
 from collections import OrderedDict
 import re
+from datetime import datetime
 
 # TODO - Make the data output into a CSV format #
 # TODO - Number of collaborators #
@@ -52,26 +53,53 @@ def get_commit_dates_and_oids(dates_and_oids, un, rn):
 
     return dates_and_oids
 
-def get_number_of_letters(dates_and_oids, un, rn):
+def get_closest_date(dates_and_oids, date):
+
+    date_convert = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    
+    for x in dates_and_oids:
+        x = x.replace("T", " ")
+        x = x.replace("Z", " ")
+        x_day = datetime.strptime(x, "'%Y-%m-%d %H:%M:%S '")
+
+        for y in dates_and_oids:
+            y = y.replace("T", " ")
+            y = y.replace("Z", " ")
+            y_day = datetime.strptime(y, "'%Y-%m-%d %H:%M:%S '")
+            
+            if(x_day > date_convert and y_day < date_convert):
+                return (y_day)
+                
+            elif(x_day < date_convert and y_day < date_convert):
+                return (x_day)
+            
+def get_lines_of_code(dates_and_oids, un, rn, date):
     
     total = ""
 
     # Prints the ordered dict
     for x in dates_and_oids:
+        x_day = x.replace("T", " ")
+        x_day = x_day.replace("Z", " ")
+        x_day = datetime.strptime(x_day, "'%Y-%m-%d %H:%M:%S '")
 
-        print(x)
-        print(dates_and_oids[x])
-        content = run_query(third_query % (un, rn, str(dates_and_oids[x])))
+        if (x_day == date):
 
-        remaining_rate_limit = content["data"]["rateLimit"]["remaining"] 
-        print("Remaining rate limit - {}".format(remaining_rate_limit))
-        
-        for y in content['data']['repository']['object']['tree']['entries']:
-            total = total + (y['object']['text'])
+            print(x)
+            print(dates_and_oids[x])
+            content = run_query(third_query % (un, rn, str(dates_and_oids[x])))
 
-        print(total)
-        print(len(re.sub(r"\W", "", total)))
-        print(total.count('\n'))
+            remaining_rate_limit = content["data"]["rateLimit"]["remaining"] 
+            print("Remaining rate limit - {}".format(remaining_rate_limit))
+            
+            for y in content['data']['repository']['object']['tree']['entries']:
+                total = total + (y['object']['text'])
+
+            print (total)
+            print("END OF SECTION")
+            print(total.count('\n'))
+
+    return total.count('\n')
             
 
 # First query, this receives a list of all the commits with their dates and their OIDs      
@@ -203,13 +231,16 @@ dates_and_oids = OrderedDict([])
 # Allows the user to input their desired GitHub Repo information
 username = input("Please input the username of the desired GitHub Repository owner: ")
 repo_name = input("Please input the Repository name: ")
+date = input("Please input the date in 2019-09-25 06:10:01 format that you wish to pull code from: ")
 
 # Gets the dates and oids of all commits
 dates_and_oids = get_commit_dates_and_oids(dates_and_oids, username, repo_name)
 
+# Gets the closest commit date to use to pull metrics from
+closest_date = get_closest_date(dates_and_oids, date)
+print(closest_date)
+
 # Gets the number of letters
-num_o_letters = get_number_of_letters(dates_and_oids, username, repo_name)
-
+num_o_lines = get_lines_of_code(dates_and_oids, username, repo_name, closest_date)
+print(num_o_lines)
     
-
-

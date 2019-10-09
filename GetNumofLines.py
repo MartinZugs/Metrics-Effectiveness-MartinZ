@@ -17,7 +17,7 @@ print(" ")
 #g = Github("user", "password")
 
 # or using an access token
-g = Github("a17012578d9ae6ee791f5e79bd25a6e9e303b414")
+g = Github("")
 
 # Github Enterprise with custom hostname
 #g = Github(base_url="https://github.com/MartinZugs/super-happiness/api/v3", login_or_token="a17012578d9ae6ee791f5e79bd25a6e9e303b414")

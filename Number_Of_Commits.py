@@ -52,26 +52,21 @@ def get_commit_dates_and_oids(dates_and_oids, un, rn):
 
     return dates_and_oids
 
-def get_number_of_letters(dates_and_oids, un, rn):
+def get_number_commits(dates_and_oids, un, rn):
     
-    total = ""
+    total = 0
 
     # Prints the ordered dict
     for x in dates_and_oids:
 
-        print(x)
-        print(dates_and_oids[x])
-        content = run_query(third_query % (un, rn, str(dates_and_oids[x])))
+        # print(x)
+        # print(dates_and_oids[x])
 
-        remaining_rate_limit = content["data"]["rateLimit"]["remaining"] 
-        print("Remaining rate limit - {}".format(remaining_rate_limit))
+        total = total + 1
+
+    return total
+
         
-        for y in content['data']['repository']['object']['tree']['entries']:
-            total = total + (y['object']['text'])
-
-        print(total)
-        print(len(re.sub(r"\W", "", total)))
-        print(total.count('\n'))
             
 
 # First query, this receives a list of all the commits with their dates and their OIDs      
@@ -208,8 +203,8 @@ repo_name = input("Please input the Repository name: ")
 dates_and_oids = get_commit_dates_and_oids(dates_and_oids, username, repo_name)
 
 # Gets the number of letters
-num_o_letters = get_number_of_letters(dates_and_oids, username, repo_name)
+num_o_commits = get_number_commits(dates_and_oids, username, repo_name)
+
+print (num_o_commits)
 
     
-
-

@@ -10,7 +10,7 @@ import re
 # TODO - Make python scripts for number of lines of code, commits, number of letters in code, and issues #
 
 # Header with my token
-headers = {"Authorization": "token "}
+headers = {"Authorization": "token c5b4966c0daf383782193872bbf19a7990b96aa5"}
 
 # A simple function to use requests.post to make the API call. Note the json= section.
 def run_query(query): 

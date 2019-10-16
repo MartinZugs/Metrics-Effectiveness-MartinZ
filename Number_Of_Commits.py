@@ -1,7 +1,9 @@
-# Import statements, just ordered dicts and requests for now
+# Import statements
 import requests
 from collections import OrderedDict
 import re
+from datetime import datetime
+import csv
 
 # TODO - Make the data output into a CSV format #
 # TODO - Number of collaborators #
@@ -10,7 +12,7 @@ import re
 # TODO - Make python scripts for number of lines of code, commits, number of letters in code, and issues #
 
 # Header with my token
-headers = {"Authorization": "token "}
+headers = {"Authorization": "token c5b4966c0daf383782193872bbf19a7990b96aa5"}
 
 # A simple function to use requests.post to make the API call. Note the json= section.
 def run_query(query): 
@@ -54,7 +56,11 @@ def get_commit_dates_and_oids(dates_and_oids, un, rn):
 
 def get_number_commits(dates_and_oids, un, rn):
     
+    p_total = len(dates_and_oids)
     total = 0
+    f = open("commits.csv", "w+")
+    writer = csv.DictWriter(f, fieldnames=["date", "oid", "total"])
+    writer.writeheader()
 
     # Prints the ordered dict
     for x in dates_and_oids:
@@ -62,8 +68,13 @@ def get_number_commits(dates_and_oids, un, rn):
         # print(x)
         # print(dates_and_oids[x])
 
+        f = open("commits.csv", "w+")
+        writer.writerows(
+          [{"date": str(x), "oid": str(dates_and_oids[x]), "total": str(p_total)}])
+        p_total = p_total - 1
         total = total + 1
 
+    f.close()
     return total
 
         

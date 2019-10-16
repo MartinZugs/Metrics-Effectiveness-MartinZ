@@ -1,8 +1,9 @@
-# Import statements, just ordered dicts and requests for now
+# Import statements
 import requests
 from collections import OrderedDict
 import re
 from datetime import datetime
+import csv
 
 # TODO - Make the data output into a CSV format #
 # TODO - Number of collaborators #
@@ -11,7 +12,7 @@ from datetime import datetime
 # TODO - Make python scripts for number of lines of code, commits, number of letters in code, and issues #
 
 # Header with my token
-headers = {"Authorization": "token "}
+headers = {"Authorization": "token c5b4966c0daf383782193872bbf19a7990b96aa5"}
 
 # A simple function to use requests.post to make the API call. Note the json= section.
 def run_query(query): 
@@ -77,6 +78,10 @@ def get_lines_of_code(dates_and_oids, un, rn, date):
     
     total = ""
 
+    f = open("lines.csv", "w+")
+    writer = csv.DictWriter(f, fieldnames=["date", "oid", "total"])
+    writer.writeheader()
+
     # Prints the ordered dict
     for x in dates_and_oids:
         x_day = x.replace("T", " ")
@@ -85,8 +90,8 @@ def get_lines_of_code(dates_and_oids, un, rn, date):
 
         if (x_day == date):
 
-            print(x)
-            print(dates_and_oids[x])
+            #print(x)
+            #print(dates_and_oids[x])
             content = run_query(third_query % (un, rn, str(dates_and_oids[x])))
 
             remaining_rate_limit = content["data"]["rateLimit"]["remaining"] 
@@ -98,7 +103,10 @@ def get_lines_of_code(dates_and_oids, un, rn, date):
             print (total)
             print("END OF SECTION")
             print(total.count('\n'))
+            f = open("lines.csv", "w+")
+            writer.writerows([{"date": str(x_day), "oid": str(dates_and_oids[x]), "total": str(total.count('\n'))}])
 
+    f.close()
     return total.count('\n')
             
 
